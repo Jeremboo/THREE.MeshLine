@@ -82,14 +82,10 @@ By default it's a white material of width 1 unit.
 
 ```MeshLineMaterial``` has several attributes to control the appereance of the ```MeshLine```:
 
-* ```map``` - a ```THREE.Texture``` to paint along the line (requires ```useMap``` set to true)
-* ```useMap``` - tells the material to use ```map``` (0 - solid color, 1 use texture)
-* ```alphaMap``` - a ```THREE.Texture``` to use as alpha along the line (requires ```useAlphaMap``` set to true)
-* ```useAlphaMap``` - tells the material to use ```alphaMap``` (0 - no alpha, 1 modulate alpha)
-* ```repeat``` - THREE.Vector2 to define the texture tiling (applies to map and alphaMap - MIGHT CHANGE IN THE FUTURE)
+* ```map``` - a ```THREE.Texture``` to paint along the line.
+* ```alphaMap``` - a ```THREE.Texture``` to use as alpha along the line.
 * ```color``` - ```THREE.Color``` to paint the line width, or tint the texture with
 * ```opacity``` - alpha value from 0 to 1 (requires ```transparent``` set to ```true```)
-* ```alphaTest``` - cutoff value from 0 to 1
 * ```dashArray``` - the length and space between dashes. (0 - no dash)
 * ```dashOffset``` - defines the location where the dash will begin. Ideal to animate the line.
 * ```dashRatio``` - defines the ratio between that is visible or not (0 - more visible, 1 - more invisible).

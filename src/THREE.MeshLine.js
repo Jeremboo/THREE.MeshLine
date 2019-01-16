@@ -245,7 +245,9 @@ MeshLine.prototype.advance = function(position) {
 
 THREE.ShaderChunk[ 'meshline_vert' ] = [
 	'',
-	THREE.ShaderChunk.logdepthbuf_pars_vertex,
+	'#include <uv_pars_vertex>',
+	'#include <color_pars_vertex>',
+	'#include <logdepthbuf_pars_vertex>',
 	THREE.ShaderChunk.fog_pars_vertex,
 	'',
 	'attribute vec3 previous;',
@@ -260,15 +262,13 @@ THREE.ShaderChunk[ 'meshline_vert' ] = [
 	'uniform float opacity;',
 	'uniform float sizeAttenuation;',
 	'',
-	'varying vec2 vUV;',
-	'varying vec4 vColor;',
 	'varying float vCounters;',
 	'',
 	'vec2 fix( vec4 i, float aspect ) {',
 	'',
 	'    vec2 res = i.xy / i.w;',
 	'    res.x *= aspect;',
-	'	 vCounters = counters;',
+	'	   vCounters = counters;',
 	'    return res;',
 	'',
 	'}',
@@ -278,8 +278,8 @@ THREE.ShaderChunk[ 'meshline_vert' ] = [
 	'    float aspect = resolution.x / resolution.y;',
 	'    float pixelWidthRatio = 1. / (resolution.x * projectionMatrix[0][0]);',
 	'',
-	'    vColor = vec4( color, opacity );',
-	'    vUV = uv;',
+	'    #include <color_vertex>',
+	'    #include <uv_vertex>',
 	'',
 	'    mat4 m = projectionMatrix * modelViewMatrix;',
 	'    vec4 finalPosition = m * vec4( position, 1.0 );',
@@ -321,7 +321,7 @@ THREE.ShaderChunk[ 'meshline_vert' ] = [
 	'',
 	'    gl_Position = finalPosition;',
 	'',
-	THREE.ShaderChunk.logdepthbuf_vertex,
+	'    #include <logdepthbuf_vertex>',
   THREE.ShaderChunk.fog_vertex && '    vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );',
   THREE.ShaderChunk.fog_vertex,
 	'}'
@@ -329,65 +329,61 @@ THREE.ShaderChunk[ 'meshline_vert' ] = [
 
 THREE.ShaderChunk[ 'meshline_frag' ] = [
 	'',
-	THREE.ShaderChunk.fog_pars_fragment,
-	THREE.ShaderChunk.logdepthbuf_pars_fragment,
+	'uniform vec3 diffuse;',
+	'uniform float opacity;',
 	'',
-	'uniform sampler2D map;',
-	'uniform sampler2D alphaMap;',
-	'uniform float useMap;',
-	'uniform float useAlphaMap;',
+	'#include <uv_pars_fragment>',
+	'#include <color_pars_fragment>',
+	'#include <map_pars_fragment>',
+	'#include <alphamap_pars_fragment>',
+	'#include <fog_pars_fragment>',
+	'#include <logdepthbuf_pars_fragment>',
+	'',
 	'uniform float dashArray;',
 	'uniform float dashOffset;',
 	'uniform float dashRatio;',
 	'uniform float visibility;',
-	'uniform float alphaTest;',
-	'uniform vec2 repeat;',
 	'',
-	'varying vec2 vUV;',
-	'varying vec4 vColor;',
 	'varying float vCounters;',
 	'',
 	'void main() {',
 	'',
-	THREE.ShaderChunk.logdepthbuf_fragment,
+	'    vec4 diffuseColor = vec4( diffuse, opacity );',
 	'',
-	'    vec4 c = vColor;',
-	'    if( useMap == 1. ) c *= texture2D( map, vUV * repeat );',
-	'    if( useAlphaMap == 1. ) c.a *= texture2D( alphaMap, vUV * repeat ).a;',
-	'    if( c.a < alphaTest ) discard;',
+	'    #include <alphatest_fragment>',
+	'    #include <logdepthbuf_fragment>',
+	'    #include <color_fragment>',
+	'    #include <map_fragment>',
+	'    #include <alphamap_fragment>',
+	'',
 	'    if( dashArray != 0. ){',
-	'        c.a *= ceil(mod(vCounters + dashOffset, dashArray) - (dashArray * dashRatio));',
+	'        diffuseColor.a *= ceil(mod(vCounters + dashOffset, dashArray) - (dashArray * dashRatio));',
 	'    }',
-	'    gl_FragColor = c;',
+	'',
+	'    gl_FragColor = diffuseColor;',
 	'    gl_FragColor.a *= step(vCounters, visibility);',
 	'',
-	THREE.ShaderChunk.fog_fragment,
+	'    #include <fog_fragment>',
+	'',
 	'}'
 ].join( '\r\n' );
 
 function MeshLineMaterial( parameters ) {
 
 	THREE.ShaderMaterial.call( this, {
-		uniforms: Object.assign({},
+		uniforms: THREE.UniformsUtils.merge([
+			THREE.UniformsLib.common,
 			THREE.UniformsLib.fog,
 			{
 				lineWidth: { value: 1 },
-				map: { value: null },
-				useMap: { value: 0 },
-				alphaMap: { value: null },
-				useAlphaMap: { value: 0 },
-				color: { value: new THREE.Color( 0xffffff ) },
-				opacity: { value: 1 },
 				resolution: { value: new THREE.Vector2( 1, 1 ) },
 				sizeAttenuation: { value: 1 },
 				dashArray: { value: 0 },
 				dashOffset: { value: 0 },
 				dashRatio: { value: 0.5 },
 				visibility: {value: 1 },
-				alphaTest: {value: 0 },
-				repeat: { value: new THREE.Vector2( 1, 1 ) },
 			}
-		),
+		]),
 
 		vertexShader: THREE.ShaderChunk.meshline_vert,
 
@@ -416,15 +412,6 @@ function MeshLineMaterial( parameters ) {
 				this.uniforms.map.value = value;
 			}
 		},
-		useMap: {
-			enumerable: true,
-			get: function () {
-				return this.uniforms.useMap.value;
-			},
-			set: function ( value ) {
-				this.uniforms.useMap.value = value;
-			}
-		},
 		alphaMap: {
 			enumerable: true,
 			get: function () {
@@ -434,22 +421,13 @@ function MeshLineMaterial( parameters ) {
 				this.uniforms.alphaMap.value = value;
 			}
 		},
-		useAlphaMap: {
-			enumerable: true,
-			get: function () {
-				return this.uniforms.useAlphaMap.value;
-			},
-			set: function ( value ) {
-				this.uniforms.useAlphaMap.value = value;
-			}
-		},
 		color: {
 			enumerable: true,
 			get: function () {
-				return this.uniforms.color.value;
+				return this.uniforms.diffuse.value;
 			},
 			set: function ( value ) {
-				this.uniforms.color.value = value;
+				this.uniforms.diffuse.value = value;
 			}
 		},
 		opacity: {
@@ -515,24 +493,6 @@ function MeshLineMaterial( parameters ) {
 				this.uniforms.visibility.value = value;
 			}
 		},
-		alphaTest: {
-			enumerable: true,
-			get: function () {
-				return this.uniforms.alphaTest.value;
-			},
-			set: function ( value ) {
-				this.uniforms.alphaTest.value = value;
-			}
-		},
-		repeat: {
-			enumerable: true,
-			get: function () {
-				return this.uniforms.repeat.value;
-			},
-			set: function ( value ) {
-				this.uniforms.repeat.value.copy( value );
-			}
-		},
 	});
 
 	this.setValues( parameters );
@@ -549,18 +509,14 @@ MeshLineMaterial.prototype.copy = function ( source ) {
 
 	this.lineWidth = source.lineWidth;
 	this.map = source.map;
-	this.useMap = source.useMap;
 	this.alphaMap = source.alphaMap;
-	this.useAlphaMap = source.useAlphaMap;
 	this.color.copy( source.color );
-	this.opacity = source.opacity;
 	this.resolution.copy( source.resolution );
 	this.sizeAttenuation = source.sizeAttenuation;
 	this.dashArray.copy( source.dashArray );
 	this.dashOffset.copy( source.dashOffset );
 	this.dashRatio.copy( source.dashRatio );
 	this.visibility = source.visibility;
-	this.alphaTest = source.alphaTest;
 	this.repeat.copy( source.repeat );
 
 	return this;

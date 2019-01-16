@@ -47,7 +47,6 @@ function makeLine( geo, c ) {
 	g.setGeometry( geo );
 
 	var material = new MeshLineMaterial( {
-		useMap: false,
 		color: new THREE.Color( colors[ c ] ),
 		opacity: 1,
 		resolution: resolution,

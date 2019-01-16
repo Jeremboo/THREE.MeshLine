@@ -159,8 +159,7 @@ function makeLine( geo ) {
 	}
 
 	var material = new MeshLineMaterial( {
-		map: strokeTexture,
-		useMap: params.strokes,
+		map: params.strokes && strokeTexture,
 		color: new THREE.Color( colors[ ~~Maf.randomInRange( 0, colors.length ) ] ),
 		opacity: 1,//params.strokes ? .5 : 1,
 		dashArray: params.dashArray,

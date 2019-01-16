@@ -41,7 +41,6 @@ render();
 
 var material = new MeshLineMaterial( {
 	map: THREE.ImageUtils.loadTexture( 'assets/stroke.png' ),
-	useMap: false,
 	color: new THREE.Color( colors[ 3 ] ),
 	opacity: 1,
 	resolution: resolution,

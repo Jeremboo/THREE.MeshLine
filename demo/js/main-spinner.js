@@ -63,7 +63,6 @@ function prepareMesh() {
 	g.setGeometry( geo, function( p ) { return p; } );
 
 	material = new MeshLineMaterial( {
-		useMap: true,
 		map: strokeTexture,
 		color: new THREE.Color( new THREE.Color( colors[ ~~Maf.randomInRange( 0, colors.length ) ] ) ),
 		opacity: 1,
