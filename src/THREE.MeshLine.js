@@ -258,8 +258,6 @@ THREE.ShaderChunk[ 'meshline_vert' ] = [
 	'uniform float lineWidth;',
 	'uniform vec3 color;',
 	'uniform float opacity;',
-	'uniform float near;',
-	'uniform float far;',
 	'uniform float sizeAttenuation;',
 	'',
 	'varying vec2 vUV;',
@@ -338,7 +336,6 @@ THREE.ShaderChunk[ 'meshline_frag' ] = [
 	'uniform sampler2D alphaMap;',
 	'uniform float useMap;',
 	'uniform float useAlphaMap;',
-	'uniform float useDash;',
 	'uniform float dashArray;',
 	'uniform float dashOffset;',
 	'uniform float dashRatio;',
@@ -358,7 +355,7 @@ THREE.ShaderChunk[ 'meshline_frag' ] = [
 	'    if( useMap == 1. ) c *= texture2D( map, vUV * repeat );',
 	'    if( useAlphaMap == 1. ) c.a *= texture2D( alphaMap, vUV * repeat ).a;',
 	'    if( c.a < alphaTest ) discard;',
-	'    if( useDash == 1. ){',
+	'    if( dashArray != 0. ){',
 	'        c.a *= ceil(mod(vCounters + dashOffset, dashArray) - (dashArray * dashRatio));',
 	'    }',
 	'    gl_FragColor = c;',
@@ -383,12 +380,9 @@ function MeshLineMaterial( parameters ) {
 				opacity: { value: 1 },
 				resolution: { value: new THREE.Vector2( 1, 1 ) },
 				sizeAttenuation: { value: 1 },
-				near: { value: 1 },
-				far: { value: 1 },
 				dashArray: { value: 0 },
 				dashOffset: { value: 0 },
 				dashRatio: { value: 0.5 },
-				useDash: { value: 0 },
 				visibility: {value: 1 },
 				alphaTest: {value: 0 },
 				repeat: { value: new THREE.Vector2( 1, 1 ) },
@@ -485,24 +479,6 @@ function MeshLineMaterial( parameters ) {
 				this.uniforms.sizeAttenuation.value = value;
 			}
 		},
-		near: {
-			enumerable: true,
-			get: function () {
-				return this.uniforms.near.value;
-			},
-			set: function ( value ) {
-				this.uniforms.near.value = value;
-			}
-		},
-		far: {
-			enumerable: true,
-			get: function () {
-				return this.uniforms.far.value;
-			},
-			set: function ( value ) {
-				this.uniforms.far.value = value;
-			}
-		},
 		dashArray: {
 			enumerable: true,
 			get: function () {
@@ -510,7 +486,6 @@ function MeshLineMaterial( parameters ) {
 			},
 			set: function ( value ) {
 				this.uniforms.dashArray.value = value;
-				this.useDash = ( value !== 0 ) ? 1 : 0
 			}
 		},
 		dashOffset: {
@@ -529,15 +504,6 @@ function MeshLineMaterial( parameters ) {
 			},
 			set: function ( value ) {
 				this.uniforms.dashRatio.value = value;
-			}
-		},
-		useDash: {
-			enumerable: true,
-			get: function () {
-				return this.uniforms.useDash.value;
-			},
-			set: function ( value ) {
-				this.uniforms.useDash.value = value;
 			}
 		},
 		visibility: {
@@ -590,12 +556,9 @@ MeshLineMaterial.prototype.copy = function ( source ) {
 	this.opacity = source.opacity;
 	this.resolution.copy( source.resolution );
 	this.sizeAttenuation = source.sizeAttenuation;
-	this.near = source.near;
-	this.far = source.far;
 	this.dashArray.copy( source.dashArray );
 	this.dashOffset.copy( source.dashOffset );
 	this.dashRatio.copy( source.dashRatio );
-	this.useDash = source.useDash;
 	this.visibility = source.visibility;
 	this.alphaTest = source.alphaTest;
 	this.repeat.copy( source.repeat );
